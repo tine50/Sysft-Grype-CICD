@@ -1,0 +1,20 @@
+# Configuration Syft - Projet Security M2
+# Rend le scan plus utile : moins de bruit, scope maîtrisé
+# Doc: https://oss.anchore.com/docs/reference/syft/configuration/
+
+# Exclure chemins inutiles (réduit temps + bruit)
+exclude:
+  - "**/.git/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/coverage/**"
+  - "**/*.log"
+  - "**/node_modules/**"   # optionnel si on scanne package-lock ; décommenter si doublons
+
+# Images Docker : squashed = couche fusionnée (défaut), all-layers = détail par couche
+scope: squashed
+
+# Métadonnées fichiers : seulement les fichiers "owned-by-package" (plus léger)
+file:
+  metadata:
+    selection: "owned-by-package"
