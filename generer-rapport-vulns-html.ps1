@@ -28,7 +28,12 @@ foreach ($m in $matches) {
     $v = $m.vulnerability
     $p = if ($m.package) { $m.package } else { $m.artifact }
     $sev = if ($v.severity) { $v.severity } else { "Unknown" }
-    $fixVersions = $m.fix.versions
+    # Grype peut mettre les versions corrigées sous match.fix ou vulnerability.fix
+    $fixVersions = $null
+    if ($m.fix -and $m.fix.versions) { $fixVersions = $m.fix.versions }
+    elseif ($v.fix -and $v.fix.versions) { $fixVersions = $v.fix.versions }
+    if (-not $fixVersions) { $fixVersions = @() }
+    if ($fixVersions -isnot [Array]) { $fixVersions = @($fixVersions) }
     $fixStr = if ($fixVersions -and $fixVersions.Count -gt 0) { ($fixVersions -join ", ") } else { "" }
     $url = $v.url
     if (-not $url -and $v.id -match "^GHSA-") {
@@ -111,10 +116,10 @@ $html = @"
   </style>
 </head>
 <body>
-  <h1>Rapport de vuln&#233;rabilit&#233;s (Grype)</h1>
+  <h1>Rapport de vulnérabilités (Grype)</h1>
   <p class="meta">Cible: $sourceTarget | Grype $grypeVersion | Généré le $date</p>
   <p class="summary"><strong>$($matches.Count) vulnérabilité(s)</strong> — $summaryText</p>
-  <p class="help">Cliquez sur l'identifiant (GHSA-… ou CVE-…) pour ouvrir l'avis de sécurité et les détails.</p>
+  <p class="help">Cliquez sur l'identifiant (GHSA-… ou CVE-…) pour ouvrir l'avis de sécurité et les détails. Si « Correction » est vide, la version corrigée peut ne pas être dans la base Grype : consultez l'avis (lien) pour les versions patched.</p>
   <table>
     <thead>
       <tr>
