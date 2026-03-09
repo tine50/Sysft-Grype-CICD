@@ -65,15 +65,17 @@ foreach ($sev in $orderSeverity) {
     if (-not $bySeverity[$sev]) { continue }
     $class = $sev.ToLower()
     foreach ($r in $bySeverity[$sev]) {
-        $fix = if ($r.FixedIn) { [System.Net.WebUtility]::HtmlEncode($r.FixedIn) } else { "<span class=\"no-fix\">— Non corrig&#233;e</span>" }
-        $urlCell = if ($r.Url) { "<a href=`"$($r.Url)`" target=`"_blank`" rel=`"noopener`" title=`"Ouvrir l&#39;avis de s&#233;curit&#233;`">$([System.Net.WebUtility]::HtmlEncode($r.VulnId))</a>" } else { [System.Net.WebUtility]::HtmlEncode($r.VulnId) }
+        $noFixHtml = '<span class="no-fix">— Non corrigée</span>'
+        $fix = if ($r.FixedIn) { [System.Net.WebUtility]::HtmlEncode($r.FixedIn) } else { $noFixHtml }
+        $titleAttr = 'Ouvrir l''avis de sécurité'
+        $urlCell = if ($r.Url) { "<a href=`"$($r.Url)`" target=`"_blank`" rel=`"noopener`" title=`"$titleAttr`">$([System.Net.WebUtility]::HtmlEncode($r.VulnId))</a>" } else { [System.Net.WebUtility]::HtmlEncode($r.VulnId) }
         $descCell = if ($r.Description) { [System.Net.WebUtility]::HtmlEncode($r.Description) } else { "<em>—</em>" }
         $rows += "        <tr class=`"severity-$class`"><td>$([System.Net.WebUtility]::HtmlEncode($r.PkgName))</td><td>$([System.Net.WebUtility]::HtmlEncode($r.PkgVersion))</td><td>$([System.Net.WebUtility]::HtmlEncode($r.PkgType))</td><td>$urlCell</td><td><span class=`"badge $class`">$sev</span></td><td>$fix</td><td class=`"desc`">$descCell</td></tr>`n"
     }
 }
 
 if ($rows -eq "") {
-    $rows = "        <tr><td colspan=`"7`">Aucune vuln&#233;rabilit&#233; trouv&#233;e.</td></tr>"
+    $rows = "        <tr><td colspan=`"7`">Aucune vulnérabilité trouvée.</td></tr>"
 }
 
 $html = @"
@@ -82,7 +84,7 @@ $html = @"
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rapport vuln&#233;rabilit&#233;s – Grype</title>
+  <title>Rapport vulnérabilités – Grype</title>
   <style>
     :root { --critical: #c0392b; --high: #e74c3c; --medium: #f39c12; --low: #3498db; --negligible: #95a5a6; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 1rem 2rem; background: #f8f9fa; color: #212529; }
@@ -110,17 +112,17 @@ $html = @"
 </head>
 <body>
   <h1>Rapport de vuln&#233;rabilit&#233;s (Grype)</h1>
-  <p class="meta">Cible: $sourceTarget | Grype $grypeVersion | G&#233;n&#233;r&#233; le $date</p>
-  <p class="summary"><strong>$($matches.Count) vuln&#233;rabilit&#233;(s)</strong> — $summaryText</p>
-  <p class="help">Cliquez sur l&#39;identifiant (GHSA-… ou CVE-…) pour ouvrir l&#39;avis de s&#233;curit&#233; et les d&#233;tails.</p>
+  <p class="meta">Cible: $sourceTarget | Grype $grypeVersion | Généré le $date</p>
+  <p class="summary"><strong>$($matches.Count) vulnérabilité(s)</strong> — $summaryText</p>
+  <p class="help">Cliquez sur l'identifiant (GHSA-… ou CVE-…) pour ouvrir l'avis de sécurité et les détails.</p>
   <table>
     <thead>
       <tr>
         <th>Paquet</th>
         <th>Version</th>
         <th>Type</th>
-        <th>Vuln&#233;rabilit&#233;</th>
-        <th>S&#233;v&#233;rit&#233;</th>
+        <th>Vulnérabilité</th>
+        <th>Sévérité</th>
         <th>Correction (fixed in)</th>
         <th>Description</th>
       </tr>
