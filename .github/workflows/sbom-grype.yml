@@ -44,11 +44,18 @@ jobs:
           grype sbom:rapports/sbom-cyclonedx.json -o table
           grype sbom:rapports/sbom-cyclonedx.json -o json --file rapports/vulns.json
 
+      - name: Generate HTML vulnerability report
+        run: |
+          pwsh -File generer-rapport-vulns-html.ps1 -VulnsJson rapports/vulns.json -Sortie rapports/vulns-report.html
+        continue-on-error: true
+
       - name: Upload vuln report artifact
         uses: actions/upload-artifact@v4
         with:
           name: vulns-report
-          path: rapports/vulns.json
+          path: |
+            rapports/vulns.json
+            rapports/vulns-report.html
 
       # Décommenter pour faire échouer le job en cas de vulnérabilité critical
       # - name: Fail on critical vulnerabilities

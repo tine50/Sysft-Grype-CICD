@@ -1,73 +1,110 @@
-# Cas pratique : Syft – Gestion des dépendances et SBOM
+# Syft + Grype – SBOM & Scan vulnérabilités (CI/CD)
 
-Ce dépôt permet de **mettre en pratique Syft** (générateur de SBOM) et de rédiger un **rapport** dans le cadre du cours Security M2.
+[![SBOM & Vuln Scan](https://github.com/tine50/Sysft-Grype-CICD/actions/workflows/sbom-grype.yml/badge.svg)](https://github.com/tine50/Sysft-Grype-CICD/actions/workflows/sbom-grype.yml)
 
-## Contenu
+Projet **Security M2** : génération de **SBOM** (Syft), scan des **vulnérabilités** (Grype), pipeline automatisé et intégration **CI/CD** avec GitHub Actions. Idéal pour la traçabilité des dépendances, l’audit de conformité (NIS2, ANSSI) et la détection des CVE sur du code ou des images Docker.
 
-| Fichier / Dossier | Description |
-|-------------------|-------------|
-| **app-exemple/** | Projet Node.js minimal (express, lodash, axios, etc.) utilisé comme cible du scan |
-| **GUIDE_SYFT.md** | Guide d’installation (Windows) et d’utilisation de Syft |
-| **generer-sbom.ps1** | Script PowerShell pour générer les SBOM (CycloneDX, SPDX, Syft JSON) |
-| **SYFT_CAS_COMPLET.md** | Cas de figure complet : config, Grype, pipeline, CI/CD (rendre Syft vraiment utile) |
-| **syft-grype-pipeline.ps1** | Pipeline Syft + Grype (SBOM → vulnérabilités → option fail-on critical) |
-| **.syft.yaml** | Configuration Syft (exclusions, scope) pour des scans plus utiles |
-| **RAPPORT_SBOM_TEMPLATE.md** | Modèle de rapport à compléter après les manipulations |
-| **rapports/** | Dossier où sont enregistrés les fichiers SBOM générés |
-| **app-exemple/Dockerfile** | Image Docker de l’app exemple (pour SBOM sur conteneur) |
-| **generer-sbom-docker.ps1** | Script pour générer le SBOM d’une image Docker |
+---
 
-## Démarrage rapide
+## En bref
 
-1. **Installer Syft** (si besoin) :
-   - **Winget :** `winget install Anchore.syft`
-   - **Docker :** `docker build -t syft-local -f syft/Dockerfile syft` puis utiliser `docker run --rm -v "${PWD}:/workspace" syft-local ...` (voir GUIDE_SYFT.md, option D).
+| Ce que fait le projet | Pourquoi c’est utile |
+|------------------------|----------------------|
+| **Inventaire (SBOM)** | Liste reproductible de tous les paquets (npm, apk, etc.) – répertoire ou image Docker. |
+| **Scan CVE (Grype)** | Détection des vulnérabilités connues sur cet inventaire, avec seuil (ex. bloquer si critical). |
+| **Rapport HTML** | Synthèse lisible des vulnérabilités (`rapports/vulns-report.html`) en plus du JSON. |
+| **Diff SBOM** | Comparer deux SBOM (baseline vs actuel) pour voir les ajouts/suppressions de paquets. |
+| **CI/CD** | À chaque push/PR : SBOM + Grype + artefacts (SBOM, rapport vulns, rapport HTML). |
 
-2. **Installer les dépendances du projet exemple** (optionnel, pour un inventaire plus riche) :
-   ```powershell
-   cd app-exemple
-   npm install
-   cd ..
-   ```
+---
 
-3. **Générer les SBOM** :
-   ```powershell
-   .\generer-sbom.ps1
-   ```
-   Les fichiers seront créés dans `rapports/`.
+## Schéma du pipeline
 
-4. **Rédiger le rapport** en s’appuyant sur `RAPPORT_SBOM_TEMPLATE.md` et les SBOM générés.
-
-## SBOM avec Docker
-
-Syft peut générer un SBOM **à partir d’une image Docker** (tout ce qui est dans l’image : OS, paquets, runtime, app).
-
-```powershell
-# Image déjà disponible (ex. node:20-alpine)
-syft node:20-alpine -o cyclonedx-json=rapports/sbom-docker-node.json
-
-# Construire notre image puis scanner
-docker build -t app-exemple-sbom:1.0 -f app-exemple/Dockerfile app-exemple
-syft app-exemple-sbom:1.0 -o cyclonedx-json=rapports/sbom-docker-app-exemple.json
-
-# Ou utiliser le script
-.\generer-sbom-docker.ps1 -ConstruireAppExemple
-.\generer-sbom-docker.ps1 -Image "nginx:alpine"
+```mermaid
+flowchart LR
+  subgraph Sources
+    A[Code / app-exemple]
+    B[Image Docker]
+  end
+  subgraph Syft
+    C[SBOM CycloneDX]
+  end
+  subgraph Grype
+    D[Scan CVE]
+    E[Rapport JSON]
+    F[Rapport HTML]
+  end
+  A --> C
+  B --> C
+  C --> D
+  D --> E
+  D --> F
 ```
 
-Voir **GUIDE_SYFT.md** section 4 pour le détail.
+---
 
-## Vérification rapide sans script
+## Démarrage rapide (local)
 
+1. **Installer Syft et Grype** (Windows) :
+   ```powershell
+   winget install Anchore.syft
+   winget install Anchore.grype
+   ```
+
+2. **Tout en une commande** (SBOM + vulnérabilités + rapport HTML) :
+   ```powershell
+   .\syft-grype-pipeline.ps1
+   .\generer-rapport-vulns-html.ps1
+   ```
+
+3. **Ouvrir le rapport** : `rapports/vulns-report.html`
+
+Pour **scanner l’image Docker** (build + SBOM + Grype) :
 ```powershell
-syft app-exemple
-syft app-exemple -o cyclonedx-json=rapports/sbom-cyclonedx.json
+.\syft-grype-pipeline.ps1 -CibleImage "app-exemple-sbom:1.0" -ConstruireImage
+.\generer-rapport-vulns-html.ps1
 ```
 
-## Suite possible
+---
 
-- Utiliser **Grype** pour scanner les vulnérabilités à partir du SBOM.
-- Intégrer Syft dans un pipeline CI/CD.
-- **Cas complet** : voir **SYFT_CAS_COMPLET.md** et lancer `.\syft-grype-pipeline.ps1` pour SBOM + scan vulnérabilités en une commande.
+## Contenu du dépôt
 
-Voir **GUIDE_SYFT.md** pour plus de détails et **RAPPORT_SBOM_TEMPLATE.md** pour la structure du rapport.
+| Élément | Description |
+|--------|-------------|
+| **app-exemple/** | Application Node.js exemple (express, lodash, axios) – cible des scans. |
+| **syft-grype-pipeline.ps1** | Pipeline Syft → Grype (SBOM + rapport vulns). Option `-FailOnSeverity critical`. |
+| **generer-rapport-vulns-html.ps1** | Génère `rapports/vulns-report.html` à partir de `rapports/vulns.json`. |
+| **comparer-sbom.ps1** | Compare deux SBOM CycloneDX (baseline vs actuel) – ajouts, suppressions, versions. |
+| **generer-sbom.ps1** | Génère SBOM (CycloneDX, SPDX, Syft JSON) du répertoire. |
+| **generer-sbom-docker.ps1** | SBOM d’une image Docker (option `-ConstruireAppExemple`). |
+| **.syft.yaml** | Config Syft (exclusions, scope). |
+| **.github/workflows/sbom-grype.yml** | CI : SBOM + Grype + artefacts (dont rapport HTML si généré). |
+| **docs/SYFT_CAS_COMPLET.md** | Guide complet : config, Grype, Dependency-Track, attestations, conformité. |
+| **docs/RAPPORT_SBOM_TEMPLATE.md** | Modèle de rapport à compléter (cas pratique M2). |
+
+---
+
+## CI/CD (GitHub Actions)
+
+Le workflow **`.github/workflows/sbom-grype.yml`** s’exécute sur chaque **push** et **pull_request** vers `main` :
+
+- Installation de Syft et Grype  
+- Génération du SBOM (répertoire `app-exemple`)  
+- Scan Grype (table + JSON)  
+- Upload des artefacts : **sbom-cyclonedx**, **vulns-report**
+
+Pour **faire échouer le job en cas de vulnérabilité critical** : décommenter la step `Fail on critical` dans le workflow.
+
+---
+
+## Aller plus loin
+
+- **Rapport HTML** : après le pipeline, lancer `.\generer-rapport-vulns-html.ps1` et ouvrir `rapports/vulns-report.html`.
+- **Comparaison SBOM** : `.\comparer-sbom.ps1 -Baseline rapports/sbom-baseline.json -Actuel rapports/sbom-cyclonedx.json`
+- **Guide complet** : [docs/SYFT_CAS_COMPLET.md](docs/SYFT_CAS_COMPLET.md) (Dependency-Track, attestations Syft/Cosign, conformité NIS2/ANSSI).
+
+---
+
+## Licence & contexte
+
+Projet réalisé dans le cadre du cours **Security M2** – gestion des dépendances, SBOM et chaîne de confiance logicielle.
