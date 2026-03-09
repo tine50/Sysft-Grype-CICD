@@ -1,0 +1,55 @@
+# SBOM + scan vulnérabilités (Syft + Grype) – Security M2
+# Déclenché sur push/PR sur main. Génère le SBOM, lance Grype, uploade les artefacts, optionnellement bloque si critical.
+
+name: SBOM & Vuln Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sbom-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft version
+
+      - name: Install Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          grype version
+
+      - name: Create rapports dir
+        run: mkdir -p rapports
+
+      - name: Generate SBOM (directory)
+        run: |
+          syft app-exemple -o cyclonedx-json=rapports/sbom-cyclonedx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: rapports/sbom-cyclonedx.json
+
+      - name: Run Grype (table + JSON)
+        run: |
+          grype sbom:rapports/sbom-cyclonedx.json -o table
+          grype sbom:rapports/sbom-cyclonedx.json -o json --file rapports/vulns.json
+
+      - name: Upload vuln report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulns-report
+          path: rapports/vulns.json
+
+      # Décommenter pour faire échouer le job en cas de vulnérabilité critical
+      # - name: Fail on critical vulnerabilities
+      #   run: grype sbom:rapports/sbom-cyclonedx.json --fail-on critical
