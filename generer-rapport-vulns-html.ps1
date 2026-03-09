@@ -29,7 +29,7 @@ foreach ($m in $matches) {
     $p = if ($m.package) { $m.package } else { $m.artifact }
     $sev = if ($v.severity) { $v.severity } else { "Unknown" }
     $fixVersions = $m.fix.versions
-    $fixStr = if ($fixVersions -and $fixVersions.Count -gt 0) { ($fixVersions -join ", ") } else { ""
+    $fixStr = if ($fixVersions -and $fixVersions.Count -gt 0) { ($fixVersions -join ", ") } else { "" }
     $url = $v.url
     if (-not $url -and $v.id -match "^GHSA-") {
         $url = "https://github.com/advisories/$($v.id)"
