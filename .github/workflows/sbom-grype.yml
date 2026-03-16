@@ -1,62 +1,62 @@
 # SBOM + scan vulnérabilités (Syft + Grype) – Security M2
 # Déclenché sur push/PR sur main. Génère le SBOM, lance Grype, uploade les artefacts, optionnellement bloque si critical.
 
-name: SBOM & Vuln Scan
+name: SBOM & Vuln Scan  # Nom du workflow affiché dans GitHub Actions
 
-on:
-  push:
+on:                     # Événements déclenchant ce workflow
+  push:                 # À chaque push sur main
     branches: [main]
-  pull_request:
+  pull_request:         # À chaque pull request vers main
     branches: [main]
 
-jobs:
-  sbom-scan:
-    runs-on: ubuntu-latest
-    steps:
+jobs:                   # Définition des jobs du workflow
+  sbom-scan:            # Job unique de génération SBOM + scan
+    runs-on: ubuntu-latest  # Runner GitHub hébergé (Ubuntu)
+    steps:              # Liste des étapes du job
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4   # Récupère le code du dépôt
 
       - name: Install Syft
-        run: |
+        run: |                     # Installe Syft via le script officiel
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          syft version
+          syft version             # Vérifie que Syft est bien installé
 
       - name: Install Grype
-        run: |
+        run: |                     # Installe Grype via le script officiel
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-          grype version
+          grype version            # Vérifie que Grype est bien installé
 
       - name: Create rapports dir
-        run: mkdir -p rapports
+        run: mkdir -p rapports     # Crée le répertoire de sortie pour les rapports
 
       - name: Generate SBOM (directory)
-        run: |
+        run: |                     # Génère un SBOM CycloneDX JSON pour app-exemple
           syft app-exemple -o cyclonedx-json=rapports/sbom-cyclonedx.json
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-cyclonedx
+          name: sbom-cyclonedx     # Nom de l’artefact stocké dans GitHub Actions
           path: rapports/sbom-cyclonedx.json
 
       - name: Run Grype (table + JSON)
-        run: |
-          grype sbom:rapports/sbom-cyclonedx.json -o table
-          grype sbom:rapports/sbom-cyclonedx.json -o json --file rapports/vulns.json
+        run: |                     # Lance le scan de vulnérabilités à partir du SBOM
+          grype sbom:rapports/sbom-cyclonedx.json -o table                        # Résumé lisible dans les logs
+          grype sbom:rapports/sbom-cyclonedx.json -o json --file rapports/vulns.json  # Résultats détaillés en JSON
 
       - name: Generate HTML vulnerability report
-        run: |
+        run: |                     # Convertit le JSON de vulnérabilités en rapport HTML
           pwsh -File generer-rapport-vulns-html.ps1 -VulnsJson rapports/vulns.json -Sortie rapports/vulns-report.html
-        continue-on-error: true
+        continue-on-error: true    # N’échoue pas le job si la génération HTML plante
 
       - name: Upload vuln report artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vulns-report
+          name: vulns-report       # Artefact contenant les résultats du scan
           path: |
             rapports/vulns.json
             rapports/vulns-report.html
 
       # Décommenter pour faire échouer le job en cas de vulnérabilité critical
       # - name: Fail on critical vulnerabilities
-      #   run: grype sbom:rapports/sbom-cyclonedx.json --fail-on critical
+      #   run: grype sbom:rapports/sbom-cyclonedx.json --fail-on critical  # Fait échouer le job si vulnérabilités critiques

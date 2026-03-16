@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rapport vulnérabilités – Grype</title>
+  <style>
+    :root { --critical: #c0392b; --high: #e74c3c; --medium: #f39c12; --low: #3498db; --negligible: #95a5a6; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 1rem 2rem; background: #f8f9fa; color: #212529; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .meta { color: #6c757d; font-size: 0.9rem; margin-bottom: 1rem; }
+    table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6; }
+    th { background: #343a40; color: #fff; font-weight: 600; }
+    tr:hover { background: #f1f3f5; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+    .badge.critical { background: var(--critical); color: #fff; }
+    .badge.high { background: var(--high); color: #fff; }
+    .badge.medium { background: var(--medium); color: #fff; }
+    .badge.low { background: var(--low); color: #fff; }
+    .badge.negligible { background: var(--negligible); color: #fff; }
+    tr.severity-critical { border-left: 3px solid var(--critical); }
+    tr.severity-high { border-left: 3px solid var(--high); }
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .summary { background: #e7f1ff; padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; }
+    .help { color: #6c757d; font-size: 0.85rem; margin-bottom: 1rem; }
+    .no-fix { color: #856404; font-style: italic; }
+    td.desc { max-width: 320px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Rapport de vulnérabilités (Grype)</h1>
+  <p class="meta">Cible: app-exemple | Grype 0.109.0 | Généré le 2026-03-16 14:30</p>
+  <p class="summary"><strong>1 vulnérabilité(s)</strong> — 1 High, 2 Medium</p>
+  <p class="help">Cliquez sur l'identifiant (GHSA-… ou CVE-…) pour ouvrir l'avis de sécurité et les détails. Si « Correction » est vide, la version corrigée peut ne pas être dans la base Grype : consultez l'avis (lien) pour les versions patched.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Paquet</th>
+        <th>Version</th>
+        <th>Type</th>
+        <th>Vulnérabilité</th>
+        <th>Sévérité</th>
+        <th>Correction (fixed in)</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="severity-high"><td>lodash</td><td>4.17.20</td><td>npm</td><td><a href="https://github.com/advisories/GHSA-35jh-r3h4-6jhm" target="_blank" rel="noopener" title="Ouvrir l'avis de sécurité">GHSA-35jh-r3h4-6jhm</a></td><td><span class="badge high">High</span></td><td>4.17.21</td><td class="desc">Command Injection in lodash</td></tr>
+        <tr class="severity-medium"><td>lodash</td><td>4.17.20</td><td>npm</td><td><a href="https://github.com/advisories/GHSA-29mw-wpgm-hmr9" target="_blank" rel="noopener" title="Ouvrir l'avis de sécurité">GHSA-29mw-wpgm-hmr9</a></td><td><span class="badge medium">Medium</span></td><td>4.17.21</td><td class="desc">Regular Expression Denial of Service (ReDoS) in lodash</td></tr>
+        <tr class="severity-medium"><td>lodash</td><td>4.17.20</td><td>npm</td><td><a href="https://github.com/advisories/GHSA-xxjr-mmjv-4gpg" target="_blank" rel="noopener" title="Ouvrir l'avis de sécurité">GHSA-xxjr-mmjv-4gpg</a></td><td><span class="badge medium">Medium</span></td><td>4.17.23</td><td class="desc">Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>
